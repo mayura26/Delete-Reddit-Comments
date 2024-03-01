@@ -10,7 +10,7 @@ load_dotenv('.env')
 # Get the values from environment variables
 client_id = os.getenv('CLIENT_ID')
 client_secret = os.getenv('CLIENT_SECRET')
-user_agent = os.getenv('USER_AGENT')
+user_agent = 'script:comment_deleter:v1.0'
 username = os.getenv('RUSERNAME')
 password = os.getenv('PASSWORD')
 
