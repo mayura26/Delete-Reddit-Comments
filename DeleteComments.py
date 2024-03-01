@@ -16,6 +16,7 @@ password = os.getenv('PASSWORD')
 
 # Add the subreddits you want to whitelist
 whitelist = ['thetagang', 'TheFinancialExpanse', 'investing', 'options', 'Vitards', 'stocks', 'FantasyPL']  
+batch_size = 10
 
 # Connect to the Reddit API
 reddit = praw.Reddit(client_id=client_id,
@@ -23,6 +24,12 @@ reddit = praw.Reddit(client_id=client_id,
                      user_agent=user_agent,
                      username=username,
                      password=password)
+
+# Check the reddit.user.me() object
+if not(hasattr(reddit.user, 'comments')):
+    print('No comments found (or your configuration is incorrect)')
+    print('Exiting...')
+    exit()
 
 # Get the user's comments
 comments = list(reddit.user.me().comments.new(limit=None))
@@ -51,13 +58,13 @@ if delete_choice.lower() == 'n':
     exit()
 
 # Group comments in sets of 10
-if len(comments_to_delete) % 10 == 0:
-    num_groups = len(comments_to_delete) // 10
+if len(comments_to_delete) % batch_size == 0:
+    num_groups = len(comments_to_delete) // batch_size
 else:
-    num_groups = len(comments_to_delete) // 10 + 1
+    num_groups = len(comments_to_delete) // batch_size + 1
 
 for i in range(num_groups):
-    group_comments = comments_to_delete[i*10:(i+1)*10]
+    group_comments = comments_to_delete[i*batch_size:(i+1)*batch_size]
     print(f'Group {i+1}:')
     for comment in group_comments:
         # Calculate the age of the comment in days
@@ -70,4 +77,10 @@ for i in range(num_groups):
             comment.delete()
         print('Comments deleted.')
     else:
-        print('Comments not deleted.')
+        for comment in group_comments:
+            delete_choice = input(f'Delete this comment? (y [enter=yes]/n): {comment.body}\n')
+            if delete_choice.lower() == 'y' or delete_choice == '':
+                comment.delete()
+                print('Comment deleted.')
+            else:
+                print('Comment not deleted.')
