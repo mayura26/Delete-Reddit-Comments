@@ -76,6 +76,7 @@ for i in range(num_groups):
     delete_choice = input('Delete these comments? (y [enter=yes]/n): ')
     if delete_choice.lower() == 'y' or delete_choice == '':
         for comment in group_comments:
+            comment.edit('Comment deleted by user request')
             comment.delete()
         print('Comments deleted.')
     else:
@@ -83,6 +84,7 @@ for i in range(num_groups):
             print(f'Subreddit: {comment.subreddit.display_name}\nComment: {comment.body}\nAge: {age} days')
             delete_choice = input(f'Delete this comment? (y [enter=yes]/n): ')
             if delete_choice.lower() == 'y' or delete_choice == '':
+                comment.edit('Comment deleted by user request')
                 comment.delete()
                 print('Comment deleted.')
             else:
