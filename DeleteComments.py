@@ -20,6 +20,7 @@ whitelist = ['TheFinancialExpanse','thetagang', 'investing', 'options', 'stocks'
 max_age = 365  # Maximum age of the comments in days
 override_whitelist_with_age = True  # Set to True to override the whitelist with the maximum age
 batch_size = 20
+auto_confirm = True  # Set to True to automatically confirm the deletion of comments
 
 # Connect to the Reddit API
 reddit = praw.Reddit(client_id=client_id,
@@ -84,14 +85,16 @@ for i in range(num_groups):
         age = (datetime.now(timezone.utc) - datetime.fromtimestamp(comment.created_utc, timezone.utc)).days
 
         print(f'Subreddit: {comment.subreddit.display_name}\nComment: {comment.body}\nAge: {age} days')
-    delete_choice = input('Delete these comments? (y [enter=yes]/n): ')
-    if delete_choice.lower() == 'y' or delete_choice == '':
+    if not(auto_confirm):
+        delete_choice = input('Delete these comments? (y [enter=yes]/n): ')
+        
+    if delete_choice.lower() == 'y' or delete_choice == '' or auto_confirm:
         for comment in group_comments:
             comment.edit('Comment deleted by user request')
             time.sleep(0.5) 
             print('Comment edited...')
             comment.delete()
-            time.sleep(0.5)  # Add a delay of 1 second to handle rate limits
+            time.sleep(0.5) # Add a delay of 1 second to handle rate limits
             print('Comment deleted...')
         print('Comments deleted.')
     else:
