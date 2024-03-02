@@ -1,6 +1,6 @@
 ## Delete Reddit Comments
 
-This project aims to provide a solution for deleting Reddit comments in bulk. You can use the batch_size to change the amount of comments you preview before you delete. If you choose to not delete a set of commments, you get the choice to go through that batch and delete comments individually.
+This project aims to provide a solution for deleting Reddit comments in bulk. You can use the batch_size to change the amount of comments you preview before you delete. If you choose to not delete a set of commments, you get the choice to go through that batch and delete comments individually. It has a 1 second delay per comment to handle rate limiting issues on the API.
 
 ### Prerequisites
 

@@ -1,3 +1,4 @@
+import time
 import praw
 
 from dotenv import load_dotenv
@@ -15,8 +16,10 @@ username = os.getenv('RUSERNAME')
 password = os.getenv('PASSWORD')
 
 # Add the subreddits you want to whitelist
-whitelist = ['thetagang', 'investing', 'options', 'stocks', 'FantasyPL']  
-batch_size = 10
+whitelist = ['TheFinancialExpanse','thetagang', 'investing', 'options', 'stocks', 'FantasyPL']  
+max_age = 365  # Maximum age of the comments in days
+override_whitelist_with_age = True  # Set to True to override the whitelist with the maximum age
+batch_size = 20
 
 # Connect to the Reddit API
 reddit = praw.Reddit(client_id=client_id,
@@ -24,6 +27,7 @@ reddit = praw.Reddit(client_id=client_id,
                      user_agent=user_agent,
                      username=username,
                      password=password)
+reddit.validate_on_submit = True
 
 # Check the reddit.user.me() object
 if not(hasattr(reddit.user.me(), 'comments')):
@@ -45,8 +49,15 @@ subreddits = set()
 for comment in comments:
     # Add the subreddit name to the set
     subreddits.add(comment.subreddit.display_name)
-    if comment.subreddit.display_name not in whitelist:
-        comments_to_delete.append(comment)
+
+    if override_whitelist_with_age:
+        # Calculate the age of the comment in days
+        age = (datetime.now(timezone.utc) - datetime.fromtimestamp(comment.created_utc, timezone.utc)).days
+        if age > max_age:
+            comments_to_delete.append(comment)
+    else:
+        if comment.subreddit.display_name not in whitelist:
+            comments_to_delete.append(comment)
 
 # Print the list of subreddits
 print('Subreddits:', subreddits)
@@ -57,7 +68,7 @@ if delete_choice.lower() == 'n':
     print('Exiting...')
     exit()
 
-# Group comments in sets of 10
+# Group comments in sets of [batch]
 if len(comments_to_delete) % batch_size == 0:
     num_groups = len(comments_to_delete) // batch_size
 else:
@@ -77,7 +88,11 @@ for i in range(num_groups):
     if delete_choice.lower() == 'y' or delete_choice == '':
         for comment in group_comments:
             comment.edit('Comment deleted by user request')
+            time.sleep(0.5) 
+            print('Comment edited...')
             comment.delete()
+            time.sleep(0.5)  # Add a delay of 1 second to handle rate limits
+            print('Comment deleted...')
         print('Comments deleted.')
     else:
         for comment in group_comments:
@@ -85,7 +100,9 @@ for i in range(num_groups):
             delete_choice = input(f'Delete this comment? (y [enter=yes]/n): ')
             if delete_choice.lower() == 'y' or delete_choice == '':
                 comment.edit('Comment deleted by user request')
+                time.sleep(0.5) 
                 comment.delete()
+                time.sleep(0.5) 
                 print('Comment deleted.')
             else:
                 print('Comment not deleted.')
